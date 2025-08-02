@@ -1,0 +1,74 @@
+This plan prioritizes security, modularity, and best practices.
+
+  High-Level Plan: Ebook to Audiobook Converter
+
+  Phase 1: Project Foundation & Core Logic (Backend)
+
+
+   1. Setup Secure Project Structure:
+       * Create a main project directory.
+       * Use Poetry (poetry init) for dependency management. This creates a pyproject.toml file and a lock
+         file (poetry.lock) to pin exact dependency versions, which is crucial for security and
+         reproducibility.
+       * Initialize a Git repository (git init).
+
+
+   2. Develop the Ebook Parsing Module:
+       * Create a src/ebook_parser.py file.
+       * Write functions to extract text from different formats (start with .txt, then add .epub using the
+         EbookLib library). This keeps all ebook-related logic in one place.
+
+
+   3. Create a Secure TTS Wrapper:
+       * Create a src/tts_wrapper.py.
+       * Define a base TTSEngine class.
+       * Create subclasses for each TTS engine you want to support (e.g., CoquiEngine, BarkEngine).
+       * This design makes it easy to add new TTS engines later without changing the main application logic.
+
+
+   4. Implement the Audio Processing Module:
+       * Create a src/audio_processor.py.
+       * Write functions for audio post-processing like normalizing volume and trimming silences.
+       * Security Focus: Instead of building shell commands with strings, use Python libraries like pydub or
+         librosa for these tasks. If you must use ffmpeg, pass arguments as a list to subprocess.run to
+         prevent command injection vulnerabilities.
+       * Example: subprocess.run(["ffmpeg", "-i", input_file, output_file])
+
+  Phase 2: User Interface & Application Entrypoint
+
+
+   5. Build the Command-Line Interface (CLI):
+       * Create a main.py file.
+       * Use the `click` library to create a user-friendly CLI. It's more modern and easier to use than
+         argparse.
+       * Define commands for converting a file, listing available voices, etc. This will be the core of your
+         application.
+
+
+   6. (Optional) Build a Web User Interface (GUI):
+       * Create a separate app_gui.py.
+       * Use Gradio or Streamlit to build a simple web interface that calls the functions from your backend
+         modules.
+       * Security Focus: Ensure any text displayed in the UI is properly sanitized to prevent Cross-Site
+         Scripting (XSS) attacks.
+
+  Phase 3: Packaging & Distribution
+
+
+   7. Containerize with Docker:
+       * Create a Dockerfile.
+       * Security Best Practices:
+           * Use a specific, slim base image (e.g., python:3.11-slim).
+           * Use a multi-stage build to keep the final image small and secure.
+           * Create and switch to a non-root user inside the Dockerfile to run the application.
+           * Use a .dockerignore file to exclude secrets, .git, and other unnecessary files.
+
+
+   8. Add Testing and Verification:
+       * Create a tests/ directory.
+       * Write unit tests with pytest for your parsing and audio processing functions.
+       * Regularly run a security scanner on your dependencies, like pip-audit, to find known vulnerabilities.
+
+
+  This plan will help you create a more secure, maintainable, and extensible version of the application.
+  Would you like me to start by creating the initial project structure and files for you?

@@ -1,0 +1,11 @@
+Step 1: Project Initialization - Complete
+Step 2: Create Project Structure - Complete
+Step 3: Implement basic .txt parsing - Complete
+Step 4: Create TTS Wrapper - Complete
+Step 5: Implement Audio Processing Module - Complete
+Step 6: Build CLI - Complete
+Step 7: Build Web UI - In Progress
+    - Switched from Django to Flet.
+    - Implemented basic Flet UI.
+    - Performed a full code review and fixed issues.
+Step 8: Launch and Test Web UI - Pending
