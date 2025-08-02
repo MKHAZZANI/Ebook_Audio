@@ -1,7 +1,7 @@
 import flet as ft
 import flet_audio as fa
 from converter.core.src.ebook_parser import parse_text
-from converter.core.src.tts_wrapper import Pyttsx3Engine
+from converter.core.src.tts_wrapper import Pyttsx3Engine, EdgeTtsEngine
 from converter.core.src.audio_processor import process_audio
 import os
 
@@ -14,6 +14,15 @@ def main(page: ft.Page):
         autoplay=False,
     )
     page.overlay.append(audio_player)
+
+    tts_engines = {"pyttsx3": Pyttsx3Engine(), "edge-tts": EdgeTtsEngine()}
+    selected_engine = tts_engines["edge-tts"] # Default to edge-tts
+
+    def get_voices_for_engine(engine_name):
+        engine = tts_engines.get(engine_name)
+        if engine:
+            return engine.get_voices()
+        return []
 
     def pick_file_result(e: ft.FilePickerResultEvent):
         selected_file.value = e.files[0].path if e.files else ""
@@ -37,12 +46,11 @@ def main(page: ft.Page):
 
             text = parse_text(selected_file.value)
 
-            tts_engine = Pyttsx3Engine()
-            voices = tts_engine.get_voices()
-            if not voices:
-                raise ValueError("No TTS voices found on your system.")
+            selected_voice = voice_dropdown.value
+            if not selected_voice:
+                raise ValueError("Please select a voice.")
 
-            tts_engine.synthesize(text, temp_audio_file, voices[0])
+            selected_engine.synthesize(text, temp_audio_file, selected_voice)
 
             process_audio(temp_audio_file, output_audio_file)
 
@@ -68,10 +76,22 @@ def main(page: ft.Page):
         audio_player.seek(0)
         audio_player.resume()
 
+    def update_voices(e):
+        nonlocal selected_engine
+        selected_engine = tts_engines[engine_dropdown.value]
+        voices = get_voices_for_engine(engine_dropdown.value)
+        voice_dropdown.options = [ft.dropdown.Option(voice) for voice in voices]
+        voice_dropdown.update()
+
     pick_file_dialog = ft.FilePicker(on_result=pick_file_result)
     page.overlay.append(pick_file_dialog)
 
     selected_file = ft.TextField(label="Selected Ebook", read_only=True)
+    engine_dropdown = ft.Dropdown(label="Select TTS Engine", options=[
+        ft.dropdown.Option("edge-tts"),
+        ft.dropdown.Option("pyttsx3"),
+    ], on_change=update_voices, value="edge-tts")
+    voice_dropdown = ft.Dropdown(label="Select Voice")
     convert_button = ft.ElevatedButton(text="Convert to Audiobook", on_click=convert_ebook)
     progress_ring = ft.ProgressRing(visible=False)
     
@@ -98,8 +118,12 @@ def main(page: ft.Page):
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         ),
+        ft.Row([engine_dropdown, voice_dropdown], alignment=ft.MainAxisAlignment.CENTER),
         ft.Row([convert_button, progress_ring], alignment=ft.MainAxisAlignment.CENTER),
         audio_controls,
     )
+
+    # Initial voice population
+    update_voices(None)
 
 ft.app(target=main)
